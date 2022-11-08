@@ -73,6 +73,7 @@ public class FlutterBluePlusPlugin implements FlutterPlugin, MethodCallHandler, 
   private static final String NAMESPACE = "flutter_blue_plus";
 
   private EventChannel stateChannel;
+  private EventChannel logChannel;
   private BluetoothManager mBluetoothManager;
   private BluetoothAdapter mBluetoothAdapter;
 
@@ -146,6 +147,8 @@ public class FlutterBluePlusPlugin implements FlutterPlugin, MethodCallHandler, 
       channel.setMethodCallHandler(this);
       stateChannel = new EventChannel(messenger, NAMESPACE + "/state");
       stateChannel.setStreamHandler(stateHandler);
+      logChannel = new EventChannel(messenger, NAMESPACE + "/log");
+      logChannel.setStreamHandler(logHandler);
       mBluetoothManager = (BluetoothManager) application.getSystemService(Context.BLUETOOTH_SERVICE);
       mBluetoothAdapter = mBluetoothManager.getAdapter();
     }
@@ -841,6 +844,20 @@ public class FlutterBluePlusPlugin implements FlutterPlugin, MethodCallHandler, 
     }
   };
 
+    private EventSink logSink;
+
+    private final StreamHandler logHandler = new StreamHandler() {
+        @Override
+        public void onListen(Object o, EventChannel.EventSink eventSink) {
+            logSink = eventSink;
+        }
+
+        @Override
+        public void onCancel(Object o) {
+            logSink = null;
+        }
+    };
+
   private void startScan(MethodCall call, Result result) {
     byte[] data = call.arguments();
     Protos.ScanSettings settings;
@@ -1125,8 +1142,13 @@ public class FlutterBluePlusPlugin implements FlutterPlugin, MethodCallHandler, 
   };
 
   private void log(LogLevel level, String message) {
+    /*
     if(level.ordinal() <= logLevel.ordinal()) {
       Log.d(TAG, message);
+    }
+     */
+    if(logSink!=null){
+      logSink.success(message);
     }
   }
 

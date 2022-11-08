@@ -12,6 +12,10 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'widgets.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  FlutterBluePlus.instance.log.listen((event) {
+    print(event);
+  });
   runApp(const FlutterBlueApp());
 }
 

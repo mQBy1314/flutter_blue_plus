@@ -9,6 +9,7 @@ class FlutterBluePlus {
       const MethodChannel('flutter_blue_plus/methods');
   final EventChannel _stateChannel =
       const EventChannel('flutter_blue_plus/state');
+  final EventChannel _logChannel = const EventChannel('flutter_blue_plus/log');
   final StreamController<MethodCall> _methodStreamController =
       StreamController.broadcast(); // ignore: close_sinks
   Stream<MethodCall> get _methodStream => _methodStreamController
@@ -30,10 +31,12 @@ class FlutterBluePlus {
   }
 
   static final FlutterBluePlus _instance = FlutterBluePlus._();
+
   static FlutterBluePlus get instance => _instance;
 
   /// Log level of the instance, default is all messages (debug).
   LogLevel _logLevel = LogLevel.debug;
+
   LogLevel get logLevel => _logLevel;
 
   /// Checks whether the device supports Bluetooth
@@ -70,6 +73,7 @@ class FlutterBluePlus {
   }
 
   final BehaviorSubject<bool> _isScanning = BehaviorSubject.seeded(false);
+
   Stream<bool> get isScanning => _isScanning.stream;
 
   final BehaviorSubject<List<ScanResult>> _scanResults =
@@ -244,6 +248,15 @@ class FlutterBluePlus {
       }
     }
   }
+
+  Stream<String>? _logStream;
+
+  /// Gets the current state of the Bluetooth module
+  Stream<String> get log async* {
+    _logStream ??=
+        _logChannel.receiveBroadcastStream().map((event) => event.toString());
+    yield* _logStream!;
+  }
 }
 
 /// Log levels for FlutterBlue
@@ -271,6 +284,7 @@ enum BluetoothState {
 
 class ScanMode {
   const ScanMode(this.value);
+
   static const lowPower = ScanMode(0);
   static const balanced = ScanMode(1);
   static const lowLatency = ScanMode(2);
@@ -280,6 +294,7 @@ class ScanMode {
 
 class DeviceIdentifier {
   final String id;
+
   const DeviceIdentifier(this.id);
 
   @override
